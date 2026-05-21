@@ -8,8 +8,8 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -75,18 +75,20 @@ public class BookRepository {
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
                     "INSERT INTO books (isbn, title, author, publisher, retail_price, stock_quantity) VALUES (?,?,?,?,?,?)",
-                    Statement.RETURN_GENERATED_KEYS);
+                    new String[]{"id"});
             ps.setString(1, book.getIsbn());
             ps.setString(2, book.getTitle());
             ps.setString(3, book.getAuthor());
             ps.setString(4, book.getPublisher());
             if (book.getRetailPrice() != null) ps.setBigDecimal(5, book.getRetailPrice());
-            else ps.setNull(5, java.sql.Types.DECIMAL);
+            else ps.setNull(5, Types.DECIMAL);
             ps.setInt(6, book.getStockQuantity() != null ? book.getStockQuantity() : 0);
             return ps;
         }, keyHolder);
         Number key = keyHolder.getKey();
-        return key != null ? key.longValue() : null;
+        if (key != null) return key.longValue();
+        // fallback: look up by ISBN
+        return findByIsbn(book.getIsbn()).map(Book::getId).orElse(null);
     }
 
     public int update(Book book) {

@@ -22,6 +22,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         e.printStackTrace();
-        return ResponseEntity.ok(ApiResponse.error(ErrorCodes.SERVER_ERROR, "服务器内部错误"));
+        String msg = e.getMessage();
+        if (msg == null || msg.isBlank()) msg = e.getClass().getSimpleName();
+        return ResponseEntity.ok(ApiResponse.error(ErrorCodes.SERVER_ERROR, "服务器内部错误: " + msg));
     }
 }

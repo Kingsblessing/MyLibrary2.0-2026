@@ -60,7 +60,13 @@ public class BookServiceImpl implements BookService {
         book.setPublisher(purchase.getPublisher());
         book.setRetailPrice(retailPrice);
         book.setStockQuantity(purchase.getQuantity());
-        bookRepo.insert(book);
+        Long newBookId = bookRepo.insert(book);
+        if (newBookId == null) {
+            throw new BizException(ErrorCodes.SERVER_ERROR, "图书创建失败，请重试");
+        }
+        if (purchase.getBookId() == null) {
+            purchaseRepo.updateBookId(purchaseId, newBookId);
+        }
         purchaseRepo.updateStatus(purchaseId, "STOCKED");
     }
 
@@ -109,8 +115,11 @@ public class BookServiceImpl implements BookService {
             book.setPublisher(purchase.getPublisher());
             book.setRetailPrice(retailPrice);
             book.setStockQuantity(quantity);
-            bookRepo.insert(book);
-            bookId = bookRepo.findByIsbn(book.getIsbn()).get().getId();
+            Long newBookId = bookRepo.insert(book);
+            if (newBookId == null) {
+                throw new BizException(ErrorCodes.SERVER_ERROR, "图书创建失败，请重试");
+            }
+            bookId = newBookId;
             purchaseRepo.updateBookId(purchaseId, bookId);
         }
         purchaseRepo.updateStatus(purchaseId, "STOCKED");
