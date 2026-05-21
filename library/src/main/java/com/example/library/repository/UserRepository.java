@@ -3,12 +3,9 @@ package com.example.library.repository;
 import com.example.library.entity.User;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -56,12 +53,10 @@ public class UserRepository {
                 rowMapper, "%" + keyword + "%");
     }
 
-    public Long insert(User user) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+    public void insert(User user) {
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO users (username, password, real_name, employee_id, gender, age, role) VALUES (?,?,?,?,?,?,?)",
-                    Statement.RETURN_GENERATED_KEYS);
+                    "INSERT INTO users (username, password, real_name, employee_id, gender, age, role) VALUES (?,?,?,?,?,?,?)");
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPassword());
             ps.setString(3, user.getRealName());
@@ -70,8 +65,7 @@ public class UserRepository {
             if (user.getAge() != null) ps.setInt(6, user.getAge()); else ps.setNull(6, java.sql.Types.INTEGER);
             ps.setString(7, user.getRole());
             return ps;
-        }, keyHolder);
-        return keyHolder.getKey().longValue();
+        });
     }
 
     public int update(User user) {

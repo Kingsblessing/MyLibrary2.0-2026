@@ -1,9 +1,11 @@
 package com.example.library.service.impl;
 
 import com.example.library.common.ErrorCodes;
+import com.example.library.entity.Book;
 import com.example.library.entity.Finance;
 import com.example.library.entity.Purchase;
 import com.example.library.exception.BizException;
+import com.example.library.repository.BookRepository;
 import com.example.library.repository.FinanceRepository;
 import com.example.library.repository.PurchaseRepository;
 import com.example.library.service.PurchaseService;
@@ -18,10 +20,12 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     private final PurchaseRepository purchaseRepo;
     private final FinanceRepository financeRepo;
+    private final BookRepository bookRepo;
 
-    public PurchaseServiceImpl(PurchaseRepository purchaseRepo, FinanceRepository financeRepo) {
+    public PurchaseServiceImpl(PurchaseRepository purchaseRepo, FinanceRepository financeRepo, BookRepository bookRepo) {
         this.purchaseRepo = purchaseRepo;
         this.financeRepo = financeRepo;
+        this.bookRepo = bookRepo;
     }
 
     @Override
@@ -36,7 +40,24 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
+    @Transactional
     public void addPurchase(Purchase purchase) {
+        // If bookId provided (existing book in inventory), auto-fill book info
+        if (purchase.getBookId() != null) {
+            Book book = bookRepo.findById(purchase.getBookId())
+                    .orElseThrow(() -> new BizException(ErrorCodes.BOOK_NOT_FOUND, "图书不存在"));
+            purchase.setIsbn(book.getIsbn());
+            purchase.setTitle(book.getTitle());
+            purchase.setAuthor(book.getAuthor());
+            purchase.setPublisher(book.getPublisher());
+        }
+        // Otherwise the request body must contain isbn, title, author, publisher
+        if (purchase.getIsbn() == null || purchase.getIsbn().isBlank()) {
+            throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN不能为空");
+        }
+        if (purchase.getTitle() == null || purchase.getTitle().isBlank()) {
+            throw new BizException(ErrorCodes.BAD_REQUEST, "书名不能为空");
+        }
         purchase.setStatus("UNPAID");
         purchaseRepo.insert(purchase);
     }
@@ -56,7 +77,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         Finance finance = new Finance();
         finance.setType("EXPENSE");
         finance.setAmount(total);
-        finance.setDescription("进货付款 - 进货单#" + id);
+        finance.setDescription("进货付款 - " + purchase.getTitle() + " x" + purchase.getQuantity());
         finance.setRelatedId(id);
         finance.setOperatorId(operatorId);
         financeRepo.insert(finance);

@@ -3,8 +3,10 @@ package com.example.library.controller;
 import com.example.library.common.ApiResponse;
 import com.example.library.entity.Book;
 import com.example.library.service.BookService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -33,8 +35,10 @@ public class BookController {
     }
 
     @PostMapping("/add")
-    public ApiResponse<Void> add(@RequestBody Book book) {
-        bookService.addBook(book);
+    public ApiResponse<Void> add(@RequestBody Map<String, Object> body) {
+        Long purchaseId = Long.valueOf(body.get("purchaseId").toString());
+        BigDecimal retailPrice = new BigDecimal(body.get("retailPrice").toString());
+        bookService.addBook(purchaseId, retailPrice);
         return ApiResponse.success();
     }
 
@@ -51,12 +55,22 @@ public class BookController {
     }
 
     @PostMapping("/stock-in")
-    public ApiResponse<Void> stockIn(@RequestBody Map<String, Object> body) {
+    public ApiResponse<Void> stockIn(@RequestBody Map<String, Object> body, HttpServletRequest request) {
+        Long purchaseId = Long.valueOf(body.get("purchaseId").toString());
+        int quantity = Integer.parseInt(body.get("quantity").toString());
+        Long operatorId = (Long) request.getAttribute("userId");
+        BigDecimal retailPrice = body.get("retailPrice") != null
+                ? new BigDecimal(body.get("retailPrice").toString()) : null;
+        bookService.stockIn(purchaseId, quantity, operatorId, retailPrice);
+        return ApiResponse.success();
+    }
+
+    @PostMapping("/sell")
+    public ApiResponse<Void> sell(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         Long bookId = Long.valueOf(body.get("bookId").toString());
         int quantity = Integer.parseInt(body.get("quantity").toString());
-        Long purchaseId = body.get("purchaseId") != null ? Long.valueOf(body.get("purchaseId").toString()) : null;
-        Long operatorId = Long.valueOf(body.get("operatorId").toString());
-        bookService.stockIn(bookId, quantity, purchaseId, operatorId);
+        Long operatorId = (Long) request.getAttribute("userId");
+        bookService.sellBook(bookId, quantity, operatorId);
         return ApiResponse.success();
     }
 }

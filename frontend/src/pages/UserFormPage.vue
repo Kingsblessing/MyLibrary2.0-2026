@@ -54,9 +54,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { addUser, updateUser, getUserInfo } from '../api/user'
+import { addUser, updateUser, getUserById } from '../api/user'
 
 const route = useRoute()
 const router = useRouter()
@@ -71,40 +72,51 @@ const form = ref({
   role: 'NORMAL',
   realName: '',
   employeeId: '',
-  gender: '男',
+  gender: '',
   age: null
 })
 
-const rules = computed(() => ({
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '长度3-20个字符', trigger: 'blur' }
-  ],
-  password: isEdit.value ? [] : [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度6-20位', trigger: 'blur' }
-  ],
-  confirmPassword: isEdit.value ? [] : [
-    { required: true, message: '请确认密码', trigger: 'blur' },
-    {
-      validator: (rule, value, callback) => {
-        if (value !== form.value.password) {
-          callback(new Error('两次密码不一致'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
-  ],
-  role: [{ required: true, message: '请选择角色', trigger: 'change' }]
-}))
+const rules = computed(() => {
+  const base = {
+    username: [
+      { required: true, message: '请输入用户名', trigger: 'blur' },
+      { min: 3, max: 20, message: '长度3-20个字符', trigger: 'blur' }
+    ],
+    role: [{ required: true, message: '请选择角色', trigger: 'change' }]
+  }
+  if (!isEdit.value) {
+    base.password = [
+      { required: true, message: '请输入密码', trigger: 'blur' },
+      { min: 6, max: 20, message: '密码长度6-20位', trigger: 'blur' }
+    ]
+    base.confirmPassword = [
+      { required: true, message: '请确认密码', trigger: 'blur' },
+      {
+        validator: (rule, value, callback) => {
+          if (value !== form.value.password) callback(new Error('两次密码不一致'))
+          else callback()
+        },
+        trigger: 'blur'
+      }
+    ]
+  }
+  return base
+})
 
 onMounted(async () => {
   if (isEdit.value) {
     try {
-      const data = await getUserInfo(route.params.id)
-      Object.assign(form.value, data)
+      const data = await getUserById(route.params.id)
+      form.value = {
+        username: data.username,
+        password: '',
+        confirmPassword: '',
+        role: data.role,
+        realName: data.realName || '',
+        employeeId: data.employeeId || '',
+        gender: data.gender || '',
+        age: data.age
+      }
     } catch {}
   }
 })

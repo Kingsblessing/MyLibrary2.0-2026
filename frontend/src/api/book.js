@@ -23,3 +23,7 @@ export function deleteBook(id) {
 export function stockIn(data) {
   return request.post('/book/stock-in', data)
 }
+
+export function sellBook(data) {
+  return request.post('/book/sell', data)
+}

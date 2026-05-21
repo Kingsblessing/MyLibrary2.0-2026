@@ -12,6 +12,10 @@ export function getUserInfo() {
   return request.get('/user/info')
 }
 
+export function getUserById(id) {
+  return request.get(`/user/${id}`)
+}
+
 export function changePassword(data) {
   return request.put('/user/password', data)
 }

@@ -32,7 +32,12 @@ service.interceptors.response.use(
     return Promise.reject(new Error(res.message))
   },
   error => {
-    ElMessage.error('网络错误')
+    if (error.response && error.response.data) {
+      const res = error.response.data
+      ElMessage.error(res.message || '请求失败')
+      return Promise.reject(new Error(res.message))
+    }
+    ElMessage.error('网络错误，请检查网络连接')
     return Promise.reject(error)
   }
 )

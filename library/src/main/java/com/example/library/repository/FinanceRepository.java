@@ -3,14 +3,12 @@ package com.example.library.repository;
 import com.example.library.entity.Finance;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +30,7 @@ public class FinanceRepository {
         f.setAmount(rs.getBigDecimal("amount"));
         f.setDescription(rs.getString("description"));
         f.setRelatedId(rs.getObject("related_id") != null ? rs.getLong("related_id") : null);
-        f.setOperatorId(rs.getLong("operator_id"));
+        f.setOperatorId(rs.getObject("operator_id") != null ? rs.getLong("operator_id") : null);
         Timestamp ts = rs.getTimestamp("created_at");
         if (ts != null) f.setCreatedAt(ts.toLocalDateTime());
         return f;
@@ -44,20 +42,19 @@ public class FinanceRepository {
         return f;
     };
 
-    public Long insert(Finance finance) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+    public void insert(Finance finance) {
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO finances (type, amount, description, related_id, operator_id) VALUES (?,?,?,?,?)",
-                    Statement.RETURN_GENERATED_KEYS);
+                    "INSERT INTO finances (type, amount, description, related_id, operator_id) VALUES (?,?,?,?,?)");
             ps.setString(1, finance.getType());
             ps.setBigDecimal(2, finance.getAmount());
             ps.setString(3, finance.getDescription());
-            if (finance.getRelatedId() != null) ps.setLong(4, finance.getRelatedId()); else ps.setNull(4, java.sql.Types.BIGINT);
-            ps.setLong(5, finance.getOperatorId());
+            if (finance.getRelatedId() != null) ps.setLong(4, finance.getRelatedId());
+            else ps.setNull(4, Types.INTEGER);
+            if (finance.getOperatorId() != null) ps.setLong(5, finance.getOperatorId());
+            else ps.setNull(5, Types.INTEGER);
             return ps;
-        }, keyHolder);
-        return keyHolder.getKey().longValue();
+        });
     }
 
     public List<Finance> search(String type, LocalDate startDate, LocalDate endDate) {

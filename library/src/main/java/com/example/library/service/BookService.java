@@ -6,8 +6,9 @@ import java.util.List;
 public interface BookService {
     List<Book> listBooks(String isbn, String title, String author, String publisher);
     Book getBook(Long id);
-    void addBook(Book book);
+    void addBook(Long purchaseId, java.math.BigDecimal retailPrice);
     void updateBook(Long id, Book book);
     void deleteBook(Long id);
-    void stockIn(Long bookId, int quantity, Long purchaseId, Long operatorId);
+    void stockIn(Long purchaseId, int quantity, Long operatorId, java.math.BigDecimal retailPrice);
+    void sellBook(Long bookId, int quantity, Long operatorId);
 }

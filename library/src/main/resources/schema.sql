@@ -23,7 +23,11 @@ CREATE TABLE IF NOT EXISTS books (
 
 CREATE TABLE IF NOT EXISTS purchases (
     id SERIAL PRIMARY KEY,
-    book_id INTEGER REFERENCES books(id),
+    book_id INTEGER,
+    isbn VARCHAR(20) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    author VARCHAR(100),
+    publisher VARCHAR(100),
     purchase_price DECIMAL(10,2) NOT NULL,
     quantity INTEGER NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'UNPAID',

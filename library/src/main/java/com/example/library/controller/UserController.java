@@ -42,6 +42,11 @@ public class UserController {
         return ApiResponse.success(userService.getUserInfo(userId));
     }
 
+    @GetMapping("/{id}")
+    public ApiResponse<User> getById(@PathVariable Long id) {
+        return ApiResponse.success(userService.getUserInfo(id));
+    }
+
     @PutMapping("/password")
     public ApiResponse<Void> changePassword(HttpServletRequest request, @RequestBody Map<String, String> body) {
         Long userId = (Long) request.getAttribute("userId");

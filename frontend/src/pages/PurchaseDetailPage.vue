@@ -7,8 +7,10 @@
     <div class="page-card" v-loading="loading">
       <el-descriptions :column="2" border>
         <el-descriptions-item label="进货ID">{{ purchase.id }}</el-descriptions-item>
-        <el-descriptions-item label="图书">{{ purchase.bookTitle }}</el-descriptions-item>
-        <el-descriptions-item label="ISBN">{{ purchase.bookIsbn }}</el-descriptions-item>
+        <el-descriptions-item label="图书">{{ purchase.title }}</el-descriptions-item>
+        <el-descriptions-item label="ISBN">{{ purchase.isbn }}</el-descriptions-item>
+        <el-descriptions-item label="作者">{{ purchase.author }}</el-descriptions-item>
+        <el-descriptions-item label="出版社">{{ purchase.publisher }}</el-descriptions-item>
         <el-descriptions-item label="进货价格">¥{{ Number(purchase.purchasePrice || 0).toFixed(2) }}</el-descriptions-item>
         <el-descriptions-item label="进货数量">{{ purchase.quantity }}</el-descriptions-item>
         <el-descriptions-item label="总金额">
@@ -54,11 +56,11 @@ async function loadData() {
 }
 
 function statusText(s) {
-  return { UNPAID: '未付款', PAID: '已付款', RETURNED: '已退货' }[s] || s
+  return { UNPAID: '未付款', PAID: '已付款', RETURNED: '已退货', STOCKED: '已入库' }[s] || s
 }
 
 function statusType(s) {
-  return { UNPAID: 'warning', PAID: 'success', RETURNED: 'info' }[s] || ''
+  return { UNPAID: 'warning', PAID: 'success', RETURNED: 'info', STOCKED: '' }[s] || ''
 }
 
 function formatDate(dateStr) {
@@ -67,7 +69,8 @@ function formatDate(dateStr) {
 }
 
 async function handlePay() {
-  await ElMessageBox.confirm('确定付款？', '付款确认', { type: 'warning' })
+  const total = (Number(purchase.value.purchasePrice || 0) * (purchase.value.quantity || 0)).toFixed(2)
+  await ElMessageBox.confirm(`确定付款？总金额 ¥${total}`, '付款确认', { type: 'warning' })
   await payPurchase(route.params.id)
   ElMessage.success('付款成功')
   loadData()

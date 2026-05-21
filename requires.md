@@ -185,6 +185,10 @@
 | created_at     | TIMESTAMP     | DEFAULT CURRENT_TIMESTAMP | 创建时间                   |
 | updated_at     | TIMESTAMP     |                           | 更新时间                   |
 
+##### 进货清单 (purlists)
+
+
+
 ##### 财务表 (finances)
 
 | 字段名      | 类型          | 约束                      | 说明                   |

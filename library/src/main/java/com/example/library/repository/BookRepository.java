@@ -80,11 +80,13 @@ public class BookRepository {
             ps.setString(2, book.getTitle());
             ps.setString(3, book.getAuthor());
             ps.setString(4, book.getPublisher());
-            ps.setBigDecimal(5, book.getRetailPrice());
+            if (book.getRetailPrice() != null) ps.setBigDecimal(5, book.getRetailPrice());
+            else ps.setNull(5, java.sql.Types.DECIMAL);
             ps.setInt(6, book.getStockQuantity() != null ? book.getStockQuantity() : 0);
             return ps;
         }, keyHolder);
-        return keyHolder.getKey().longValue();
+        Number key = keyHolder.getKey();
+        return key != null ? key.longValue() : null;
     }
 
     public int update(Book book) {
