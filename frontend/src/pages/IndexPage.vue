@@ -199,4 +199,40 @@ onUnmounted(() => {
   font-size: 13px;
   color: #86909C;
 }
+
+@media (max-width: 767px) {
+  .welcome-section {
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .time-display {
+    font-size: 22px;
+  }
+
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .quick-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .quick-card {
+    padding: 20px 16px;
+  }
+}
 </style>

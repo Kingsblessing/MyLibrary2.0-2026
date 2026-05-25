@@ -241,4 +241,19 @@ onUnmounted(() => {
 .table-section {
   margin-top: 24px;
 }
+
+@media (max-width: 767px) {
+  .summary-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .chart-container {
+    height: 240px;
+  }
+
+  .year-picker {
+    margin-top: 8px;
+  }
+}
 </style>

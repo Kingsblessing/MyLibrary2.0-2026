@@ -214,4 +214,20 @@ async function handleLogin() {
 .fade-leave-to {
   opacity: 0;
 }
+
+@media (max-width: 767px) {
+  .login-card {
+    width: 90%;
+    padding: 32px 24px;
+  }
+
+  .login-header h1 {
+    font-size: 20px;
+  }
+
+  .login-btn {
+    height: 40px;
+    font-size: 15px;
+  }
+}
 </style>

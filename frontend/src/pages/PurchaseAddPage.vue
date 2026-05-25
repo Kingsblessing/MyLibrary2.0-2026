@@ -183,4 +183,14 @@ async function handleSubmit() {
 .page-card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .total-amount { font-size: 20px; font-weight: 600; color: #F53F3F; }
 .book-preview { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px; background: #F7F8FA; border-radius: 6px; margin-bottom: 16px; }
+
+@media (max-width: 767px) {
+  .el-form {
+    max-width: 100% !important;
+  }
+
+  .el-select {
+    width: 100% !important;
+  }
+}
 </style>

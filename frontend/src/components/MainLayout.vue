@@ -1,6 +1,7 @@
 <template>
   <div class="layout">
-    <aside class="sidebar" :class="{ collapsed: isCollapsed }">
+    <!-- Desktop sidebar -->
+    <aside class="sidebar hide-on-mobile" :class="{ collapsed: isCollapsed }">
       <div class="logo" @click="$router.push('/index')">
         <el-icon :size="24"><Reading /></el-icon>
         <span v-show="!isCollapsed" class="logo-text">图书管理系统</span>
@@ -48,11 +49,14 @@
     <div class="main-area">
       <header class="navbar">
         <div class="navbar-left">
-          <el-icon class="collapse-btn" @click="isCollapsed = !isCollapsed" :size="20">
+          <el-icon class="collapse-btn hide-on-mobile" @click="isCollapsed = !isCollapsed" :size="20">
             <Fold v-if="!isCollapsed" />
             <Expand v-else />
           </el-icon>
-          <el-breadcrumb separator="/">
+          <el-icon class="hamburger-btn show-on-mobile" @click="drawerVisible = true" :size="22">
+            <Menu />
+          </el-icon>
+          <el-breadcrumb class="hide-on-mobile" separator="/">
             <el-breadcrumb-item :to="{ path: '/index' }">首页</el-breadcrumb-item>
             <el-breadcrumb-item v-if="$route.meta.title">{{ $route.meta.title }}</el-breadcrumb-item>
           </el-breadcrumb>
@@ -100,6 +104,50 @@
         <el-button type="primary" @click="submitPassword">确认</el-button>
       </template>
     </el-dialog>
+
+    <!-- Mobile drawer -->
+    <el-drawer
+      v-model="drawerVisible"
+      direction="ltr"
+      size="240px"
+      :with-header="false"
+      class="mobile-drawer"
+    >
+      <el-menu
+        :default-active="activeMenu"
+        background-color="#001529"
+        text-color="#ffffffb3"
+        active-text-color="#165DFF"
+        router
+        unique-opened
+        @select="drawerVisible = false"
+      >
+        <el-menu-item index="/index">
+          <el-icon><HomeFilled /></el-icon>
+          <span>首页</span>
+        </el-menu-item>
+        <el-menu-item index="/book">
+          <el-icon><Collection /></el-icon>
+          <span>图书管理</span>
+        </el-menu-item>
+        <el-menu-item index="/purchase">
+          <el-icon><ShoppingCart /></el-icon>
+          <span>进货管理</span>
+        </el-menu-item>
+        <el-sub-menu index="finance">
+          <template #title>
+            <el-icon><Money /></el-icon>
+            <span>财务管理</span>
+          </template>
+          <el-menu-item index="/finance/bills" @click="drawerVisible = false">账单列表</el-menu-item>
+          <el-menu-item index="/finance/report" @click="drawerVisible = false">财务报表</el-menu-item>
+        </el-sub-menu>
+        <el-menu-item index="/user" v-if="userRole === 'SUPER'">
+          <el-icon><User /></el-icon>
+          <span>用户管理</span>
+        </el-menu-item>
+      </el-menu>
+    </el-drawer>
   </div>
 </template>
 
@@ -107,11 +155,15 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Menu } from '@element-plus/icons-vue'
+import { useResponsive } from '../composables/useResponsive'
 import { logout, changePassword } from '../api/user'
 
+const { isMobile } = useResponsive()
 const route = useRoute()
 const router = useRouter()
 const isCollapsed = ref(false)
+const drawerVisible = ref(false)
 const pwdDialogVisible = ref(false)
 const pwdFormRef = ref(null)
 
@@ -281,5 +333,42 @@ async function submitPassword() {
 
 .page-leave-to {
   opacity: 0;
+}
+
+.hamburger-btn {
+  cursor: pointer;
+  color: #4E5969;
+  transition: color 0.2s;
+  display: none;
+}
+
+.hamburger-btn:hover {
+  color: #165DFF;
+}
+
+.mobile-drawer :deep(.el-drawer__body) {
+  padding: 0;
+}
+
+.mobile-drawer :deep(.el-menu) {
+  border-right: none;
+}
+
+.mobile-drawer :deep(.el-menu-item.is-active) {
+  background: #165DFF20 !important;
+}
+
+@media (max-width: 767px) {
+  .hamburger-btn {
+    display: initial;
+  }
+
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .content {
+    padding: 16px;
+  }
 }
 </style>

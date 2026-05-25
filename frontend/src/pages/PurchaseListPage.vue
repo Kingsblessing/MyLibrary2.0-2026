@@ -164,4 +164,14 @@ onMounted(loadData)
 .page-header h3 { font-size: 20px; font-weight: 600; color: #1D2129; }
 .page-card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .search-bar { display: flex; gap: 12px; margin-bottom: 16px; }
+
+@media (max-width: 767px) {
+  .search-bar {
+    flex-wrap: wrap;
+  }
+
+  .search-bar .el-select {
+    width: 100% !important;
+  }
+}
 </style>

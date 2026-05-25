@@ -1,0 +1,1 @@
+import{A as i}from"./index-2OCfTDQ7.js";const s=i("(max-width: 767px)"),t=i("(min-width: 768px) and (max-width: 991px)"),e=i("(min-width: 992px)");function o(){return{isMobile:s,isTablet:t,isDesktop:e}}export{o as u};

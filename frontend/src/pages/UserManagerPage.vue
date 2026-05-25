@@ -120,4 +120,14 @@ onMounted(loadData)
   gap: 12px;
   margin-bottom: 16px;
 }
+
+@media (max-width: 767px) {
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .search-bar .el-input {
+    width: 100% !important;
+  }
+}
 </style>

@@ -165,4 +165,10 @@ onMounted(loadData)
 .page-card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .search-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .price { color: #F53F3F; font-size: 18px; }
+
+@media (max-width: 767px) {
+  .search-bar .el-input {
+    width: 100% !important;
+  }
+}
 </style>

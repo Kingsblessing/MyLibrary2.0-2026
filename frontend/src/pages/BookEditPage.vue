@@ -175,4 +175,10 @@ async function handleSubmit() {
 .page-header { margin-bottom: 16px; }
 .page-header h3 { font-size: 20px; font-weight: 600; color: #1D2129; }
 .page-card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+@media (max-width: 767px) {
+  .el-form {
+    max-width: 100% !important;
+  }
+}
 </style>

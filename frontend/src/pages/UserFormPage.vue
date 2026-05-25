@@ -165,4 +165,10 @@ async function handleSubmit() {
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
+
+@media (max-width: 767px) {
+  .el-form {
+    max-width: 100% !important;
+  }
+}
 </style>

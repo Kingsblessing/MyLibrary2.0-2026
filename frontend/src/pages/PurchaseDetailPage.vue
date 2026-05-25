@@ -5,7 +5,7 @@
     </div>
 
     <div class="page-card" v-loading="loading">
-      <el-descriptions :column="2" border>
+      <el-descriptions :column="descColumn" border>
         <el-descriptions-item label="进货ID">{{ purchase.id }}</el-descriptions-item>
         <el-descriptions-item label="图书">{{ purchase.title }}</el-descriptions-item>
         <el-descriptions-item label="ISBN">{{ purchase.isbn }}</el-descriptions-item>
@@ -36,15 +36,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useResponsive } from '../composables/useResponsive'
 import { getPurchase, payPurchase, returnPurchase } from '../api/purchase'
 
+const { isMobile } = useResponsive()
 const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
 const purchase = ref({})
+const descColumn = computed(() => isMobile.value ? 1 : 2)
 
 async function loadData() {
   loading.value = true
@@ -97,4 +100,10 @@ onMounted(loadData)
 .page-card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .price { color: #F53F3F; font-weight: 600; font-size: 16px; }
 .action-bar { margin-top: 24px; display: flex; gap: 12px; }
+
+@media (max-width: 767px) {
+  .action-bar {
+    flex-wrap: wrap;
+  }
+}
 </style>

@@ -147,4 +147,15 @@ onMounted(loadData)
 .expense { color: #F53F3F; }
 .text-income { color: #00B42A; font-weight: 500; }
 .text-expense { color: #F53F3F; font-weight: 500; }
+
+@media (max-width: 767px) {
+  .summary-bar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .search-bar .el-date-editor {
+    width: 100% !important;
+  }
+}
 </style>

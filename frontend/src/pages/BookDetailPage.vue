@@ -197,4 +197,20 @@ onMounted(loadBook)
 }
 
 .price { color: #F53F3F; font-size: 18px; }
+
+@media (max-width: 767px) {
+  .detail-layout {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .cover-placeholder {
+    width: 100%;
+    height: 200px;
+  }
+
+  .page-card {
+    padding: 16px;
+  }
+}
 </style>
