@@ -1,0 +1,1 @@
+import{s as e}from"./request-DuWU4Y2X.js";function t(r){return e.get("/purchase/list",{params:r})}function a(r){return e.get(`/purchase/${r}`)}function s(r){return e.post("/purchase/add",r)}function n(r){return e.put(`/purchase/${r}/pay`)}function c(r){return e.put(`/purchase/${r}/return`)}export{s as a,t as b,a as g,n as p,c as r};

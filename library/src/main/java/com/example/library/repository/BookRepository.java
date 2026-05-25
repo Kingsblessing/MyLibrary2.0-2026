@@ -50,6 +50,30 @@ public class BookRepository {
     public List<Book> search(String isbn, String title, String author, String publisher) {
         StringBuilder sql = new StringBuilder("SELECT * FROM books WHERE 1=1");
         List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, isbn, title, author, publisher);
+        sql.append(" ORDER BY id");
+        return jdbc.query(sql.toString(), rowMapper, params.toArray());
+    }
+
+    public List<Book> search(String isbn, String title, String author, String publisher, int page, int size) {
+        StringBuilder sql = new StringBuilder("SELECT * FROM books WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, isbn, title, author, publisher);
+        sql.append(" ORDER BY id LIMIT ? OFFSET ?");
+        params.add(size);
+        params.add((page - 1) * size);
+        return jdbc.query(sql.toString(), rowMapper, params.toArray());
+    }
+
+    public int count(String isbn, String title, String author, String publisher) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM books WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, isbn, title, author, publisher);
+        Integer c = jdbc.queryForObject(sql.toString(), Integer.class, params.toArray());
+        return c != null ? c : 0;
+    }
+
+    private void appendFilters(StringBuilder sql, List<Object> params, String isbn, String title, String author, String publisher) {
         if (isbn != null && !isbn.isBlank()) {
             sql.append(" AND isbn LIKE ?");
             params.add("%" + isbn + "%");
@@ -66,8 +90,6 @@ public class BookRepository {
             sql.append(" AND publisher LIKE ?");
             params.add("%" + publisher + "%");
         }
-        sql.append(" ORDER BY id");
-        return jdbc.query(sql.toString(), rowMapper, params.toArray());
     }
 
     public Long insert(Book book) {

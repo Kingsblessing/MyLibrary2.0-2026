@@ -21,12 +21,14 @@ public class BookController {
     }
 
     @GetMapping("/list")
-    public ApiResponse<List<Book>> list(
+    public ApiResponse<?> list(
             @RequestParam(required = false) String isbn,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String author,
-            @RequestParam(required = false) String publisher) {
-        return ApiResponse.success(bookService.listBooks(isbn, title, author, publisher));
+            @RequestParam(required = false) String publisher,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return ApiResponse.success(bookService.listBooks(isbn, title, author, publisher, page, size));
     }
 
     @GetMapping("/{id}")

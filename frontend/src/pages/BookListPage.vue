@@ -42,6 +42,16 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="pagination-wrap" v-if="total > 0">
+        <el-pagination
+          v-model:current-page="page"
+          :page-size="size"
+          :total="total"
+          layout="prev, pager, next, jumper, total"
+          @current-change="handlePageChange"
+        />
+      </div>
     </div>
 
     <el-dialog v-model="sellDialog.visible" title="出售图书" width="400px" destroy-on-close>
@@ -77,6 +87,9 @@ import { getBookList, deleteBook, sellBook } from '../api/book'
 
 const loading = ref(false)
 const tableData = ref([])
+const total = ref(0)
+const page = ref(1)
+const size = ref(100)
 const query = ref({ title: '', author: '', isbn: '', publisher: '' })
 const sellFormRef = ref(null)
 const sellDialog = ref({
@@ -111,16 +124,28 @@ const sellAmount = computed(() => {
 async function loadData() {
   loading.value = true
   try {
-    const params = {}
+    const params = { page: page.value, size: size.value }
     Object.entries(query.value).forEach(([k, v]) => { if (v) params[k] = v })
-    tableData.value = await getBookList(params)
+    const data = await getBookList(params)
+    tableData.value = data.list || []
+    total.value = data.total || 0
+    if (data.list && data.list.length === 0 && page.value > 1) {
+      page.value = Math.max(1, Math.ceil(data.total / size.value))
+      return loadData()
+    }
   } catch {} finally {
     loading.value = false
   }
 }
 
+function handlePageChange(newPage) {
+  page.value = newPage
+  loadData()
+}
+
 function resetQuery() {
   query.value = { title: '', author: '', isbn: '', publisher: '' }
+  page.value = 1
   loadData()
 }
 
@@ -166,7 +191,18 @@ onMounted(loadData)
 .search-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .price { color: #F53F3F; font-size: 18px; }
 
+.pagination-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
 @media (max-width: 767px) {
+  .pagination-wrap :deep(.el-pagination) {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
   .search-bar .el-input {
     width: 100% !important;
   }

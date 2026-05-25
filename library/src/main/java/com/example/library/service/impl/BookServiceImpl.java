@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class BookServiceImpl implements BookService {
@@ -31,6 +33,18 @@ public class BookServiceImpl implements BookService {
     @Override
     public List<Book> listBooks(String isbn, String title, String author, String publisher) {
         return bookRepo.search(isbn, title, author, publisher);
+    }
+
+    @Override
+    public Map<String, Object> listBooks(String isbn, String title, String author, String publisher, int page, int size) {
+        int total = bookRepo.count(isbn, title, author, publisher);
+        List<Book> list = bookRepo.search(isbn, title, author, publisher, page, size);
+        Map<String, Object> result = new HashMap<>();
+        result.put("total", total);
+        result.put("list", list);
+        result.put("page", page);
+        result.put("size", size);
+        return result;
     }
 
     @Override

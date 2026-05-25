@@ -138,7 +138,8 @@ function onModeChange() {
 async function searchBooks(query) {
   if (!query) return
   try {
-    bookOptions.value = await getBookList({ title: query })
+    const data = await getBookList({ title: query, page: 1, size: 100 })
+    bookOptions.value = data.list || data
   } catch {}
 }
 
