@@ -42,7 +42,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public void addPurchase(Purchase purchase) {
-        // 1. 若关联了已有图书，自动填充图书信息（此时 ISBN 已由系统保证正确，无需再校验）
+        // 1. 若关联了已有图书，自动填充图书信息
         if (purchase.getBookId() != null) {
             Book book = bookRepo.findById(purchase.getBookId())
                     .orElseThrow(() -> new BizException(ErrorCodes.BOOK_NOT_FOUND, "图书不存在"));
@@ -60,28 +60,11 @@ public class PurchaseServiceImpl implements PurchaseService {
             throw new BizException(ErrorCodes.BAD_REQUEST, "书名不能为空");
         }
 
-        // 3. 清除分隔符，保留数字及可能的 X（仅 10 位 ISBN 允许 X）
-        String rawIsbn = purchase.getIsbn().replaceAll("[^0-9Xx]", "").toUpperCase();
+        // 3. 【统一格式化】清洗、校验、转换为 13 位纯数字
+        String normalizedIsbn = normalizeIsbn(purchase.getIsbn());
+        purchase.setIsbn(normalizedIsbn);
 
-        // 4. 根据长度选择校验方式，并统一转为 13 位纯数字存储
-        String normalizedIsbn;
-        if (rawIsbn.length() == 13) {
-            if (!isValidIsbn13(rawIsbn)) {
-                throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN（13位）校验位错误");
-            }
-            normalizedIsbn = rawIsbn;
-        } else if (rawIsbn.length() == 10) {
-            if (!isValidIsbn10(rawIsbn)) {
-                throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN（10位）校验位错误");
-            }
-            normalizedIsbn = convert10to13(rawIsbn);
-        } else {
-            throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN长度必须为10位或13位");
-        }
-
-        purchase.setIsbn(normalizedIsbn);   // 统一存储 13 位纯数字
-
-        // 5. 查重：仅当未关联已有图书时才检查（同一本书允许重复进货）
+        // 4. 查重：仅当未关联已有图书时才检查（同一本书允许重复进货）
         if (purchase.getBookId() == null) {
             if (bookRepo.findByIsbn(normalizedIsbn).isPresent()) {
                 throw new BizException(ErrorCodes.ISBN_EXISTS,
@@ -91,6 +74,31 @@ public class PurchaseServiceImpl implements PurchaseService {
 
         purchase.setStatus("UNPAID");
         purchaseRepo.insert(purchase);
+    }
+
+    /**
+     * 将输入的 ISBN 统一清洗并转换为 13 位纯数字格式
+     * @param rawIsbn 用户输入的原始字符串（可能含连字符、空格等）
+     * @return 13 位纯数字 ISBN
+     * @throws BizException 如果格式不正确或校验位错误
+     */
+    private String normalizeIsbn(String rawIsbn) {
+        // 去除所有非数字和 X 的字符
+        String cleaned = rawIsbn.replaceAll("[^0-9Xx]", "").toUpperCase();
+
+        if (cleaned.length() == 13) {
+            if (!isValidIsbn13(cleaned)) {
+                throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN（13位）校验位错误");
+            }
+            return cleaned;
+        } else if (cleaned.length() == 10) {
+            if (!isValidIsbn10(cleaned)) {
+                throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN（10位）校验位错误");
+            }
+            return convert10to13(cleaned);
+        } else {
+            throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN长度必须为10位或13位");
+        }
     }
 
     // ---------- 辅助校验方法 ----------
