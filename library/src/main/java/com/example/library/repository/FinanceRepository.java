@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
+@SuppressWarnings("null")
 public class FinanceRepository {
 
     private final JdbcTemplate jdbc;

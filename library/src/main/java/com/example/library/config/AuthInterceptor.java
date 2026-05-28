@@ -4,6 +4,8 @@ import com.example.library.common.ApiResponse;
 import com.example.library.common.ErrorCodes;
 import com.example.library.service.impl.UserServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.lang.NonNull;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
@@ -15,7 +17,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         // Allow preflight CORS requests
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;

@@ -115,8 +115,8 @@
     >
       <el-menu
         :default-active="activeMenu"
-        background-color="#001529"
-        text-color="#ffffffb3"
+        background-color="#ffffff"
+        text-color="#000000b3"
         active-text-color="#165DFF"
         router
         unique-opened

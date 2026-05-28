@@ -40,9 +40,9 @@
 
 对于已付款的书籍，当书籍到货后，可以将其添加到库存中，此时需要添加上书籍的零售价格。
 
-### 9. 书籍购买
+### 9. 书籍销售
 
-使用标售零售价格购买书籍，这时书籍的库存数量需要相应地减少。
+使用标售的零售价格出售库存中的书籍，这时书籍的库存数量需要相应地减少。同时系统的财务账户要添加一条账单记录，记录下财务账户的收入。
 
 ### 10. 财务管理
 
@@ -145,61 +145,55 @@
 
 #### 数据库设计
 
-##### 用户表 (users)
+```sql
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(32) NOT NULL,
+    real_name VARCHAR(50),
+    employee_id VARCHAR(20) UNIQUE,
+    gender VARCHAR(10),
+    age INTEGER,
+    role VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-| 字段名      | 类型        | 约束                      | 说明               |
-| ----------- | ----------- | ------------------------- | ------------------ |
-| id          | SERIAL      | PRIMARY KEY               | 用户ID             |
-| username    | VARCHAR(50) | UNIQUE, NOT NULL          | 用户名             |
-| password    | VARCHAR(32) | NOT NULL                  | MD5加密后的密码    |
-| real_name   | VARCHAR(50) |                           | 真实姓名           |
-| employee_id | VARCHAR(20) | UNIQUE                    | 工号               |
-| gender      | VARCHAR(10) |                           | 性别               |
-| age         | INTEGER     |                           | 年龄               |
-| role        | VARCHAR(20) | NOT NULL DEFAULT 'NORMAL' | 角色(SUPER/NORMAL) |
-| created_at  | TIMESTAMP   | DEFAULT CURRENT_TIMESTAMP | 创建时间           |
+CREATE TABLE IF NOT EXISTS books (
+    id SERIAL PRIMARY KEY,
+    isbn VARCHAR(20) UNIQUE NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    author VARCHAR(100),
+    publisher VARCHAR(100),
+    retail_price DECIMAL(10,2),
+    stock_quantity INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-##### 图书表 (books)
+CREATE TABLE IF NOT EXISTS purchases (
+    id SERIAL PRIMARY KEY,
+    book_id INTEGER,
+    isbn VARCHAR(20) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    author VARCHAR(100),
+    publisher VARCHAR(100),
+    purchase_price DECIMAL(10,2) NOT NULL,
+    quantity INTEGER NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'UNPAID',
+    operator_id INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
 
-| 字段名         | 类型          | 约束                      | 说明     |
-| -------------- | ------------- | ------------------------- | -------- |
-| id             | SERIAL        | PRIMARY KEY               | 图书ID   |
-| isbn           | VARCHAR(20)   | UNIQUE, NOT NULL          | ISBN号   |
-| title          | VARCHAR(200)  | NOT NULL                  | 书名     |
-| author         | VARCHAR(100)  |                           | 作者     |
-| publisher      | VARCHAR(100)  |                           | 出版社   |
-| retail_price   | DECIMAL(10,2) |                           | 零售价格 |
-| stock_quantity | INTEGER       | DEFAULT 0                 | 库存数量 |
-| created_at     | TIMESTAMP     | DEFAULT CURRENT_TIMESTAMP | 创建时间 |
-
-##### 进货表 (purchases)
-
-| 字段名         | 类型          | 约束                      | 说明                       |
-| -------------- | ------------- | ------------------------- | -------------------------- |
-| id             | SERIAL        | PRIMARY KEY               | 进货ID                     |
-| book_id        | INTEGER       | REFERENCES books(id)      | 图书ID                     |
-| purchase_price | DECIMAL(10,2) | NOT NULL                  | 进货价格                   |
-| quantity       | INTEGER       | NOT NULL                  | 进货数量                   |
-| status         | VARCHAR(20)   | NOT NULL DEFAULT 'UNPAID' | 状态(UNPAID/PAID/RETURNED) |
-| operator_id    | INTEGER       | REFERENCES users(id)      | 操作人                     |
-| created_at     | TIMESTAMP     | DEFAULT CURRENT_TIMESTAMP | 创建时间                   |
-| updated_at     | TIMESTAMP     |                           | 更新时间                   |
-
-##### 进货清单 (purlists)
-
-
-
-##### 财务表 (finances)
-
-| 字段名      | 类型          | 约束                      | 说明                   |
-| ----------- | ------------- | ------------------------- | ---------------------- |
-| id          | SERIAL        | PRIMARY KEY               | 账单ID                 |
-| type        | VARCHAR(20)   | NOT NULL                  | 类型(INCOME/EXPENSE)   |
-| amount      | DECIMAL(10,2) | NOT NULL                  | 金额                   |
-| description | VARCHAR(200)  |                           | 描述                   |
-| related_id  | INTEGER       |                           | 关联ID(进货ID或销售ID) |
-| operator_id | INTEGER       | REFERENCES users(id)      | 操作人                 |
-| created_at  | TIMESTAMP     | DEFAULT CURRENT_TIMESTAMP | 创建时间               |
+CREATE TABLE IF NOT EXISTS finances (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(20) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    description VARCHAR(200),
+    related_id INTEGER,
+    operator_id INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
 
 #### 后端结构
 
