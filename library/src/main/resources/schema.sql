@@ -18,7 +18,12 @@ CREATE TABLE IF NOT EXISTS books (
     publisher VARCHAR(100),
     retail_price DECIMAL(10,2),
     stock_quantity INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT isbn_format_check CHECK (
+        (LENGTH(isbn) = 10 AND isbn ~ '^[0-9]{9}[0-9X]$')
+        OR
+        (LENGTH(isbn) = 13 AND isbn ~ '^97[89][0-9]{10}$')
+    )
 );
 
 CREATE TABLE IF NOT EXISTS purchases (

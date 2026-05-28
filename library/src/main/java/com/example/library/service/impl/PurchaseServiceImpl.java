@@ -42,7 +42,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public void addPurchase(Purchase purchase) {
-        // If bookId provided (existing book in inventory), auto-fill book info
+        // 1. 若关联了已有图书，自动填充图书信息
         if (purchase.getBookId() != null) {
             Book book = bookRepo.findById(purchase.getBookId())
                     .orElseThrow(() -> new BizException(ErrorCodes.BOOK_NOT_FOUND, "图书不存在"));
@@ -51,15 +51,52 @@ public class PurchaseServiceImpl implements PurchaseService {
             purchase.setAuthor(book.getAuthor());
             purchase.setPublisher(book.getPublisher());
         }
-        // Otherwise the request body must contain isbn, title, author, publisher
+
+        // 2. 必填校验
         if (purchase.getIsbn() == null || purchase.getIsbn().isBlank()) {
             throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN不能为空");
         }
         if (purchase.getTitle() == null || purchase.getTitle().isBlank()) {
             throw new BizException(ErrorCodes.BAD_REQUEST, "书名不能为空");
         }
+
+        // 3. ISBN 校验位检查（支持带连字符的格式）
+        String cleanIsbn = purchase.getIsbn().replaceAll("[^0-9]", "");  // 去除空格、连字符等
+        if (!isValidIsbn13(cleanIsbn)) {
+            throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN格式不正确或校验位错误");
+        }
+        purchase.setIsbn(cleanIsbn);  // 统一存储纯数字
+
+        // 4. 如果未关联已有图书，检查 ISBN 是否已存在于 books 表
+        if (purchase.getBookId() == null) {
+            if (bookRepo.findByIsbn(cleanIsbn).isPresent()) {
+                throw new BizException(ErrorCodes.ISBN_EXISTS, 
+                        "该ISBN已存在对应的库存图书，请通过选择图书（提供bookId）创建进货单");
+            }
+        }
+
         purchase.setStatus("UNPAID");
         purchaseRepo.insert(purchase);
+    }
+
+    /**
+     * 验证 ISBN‑13 校验位（只接受13位纯数字）
+     */
+    private boolean isValidIsbn13(String isbn) {
+        if (isbn == null || isbn.length() != 13) {
+            return false;
+        }
+        if (!isbn.matches("\\d{13}")) {
+            return false;
+        }
+        int sum = 0;
+        for (int i = 0; i < 12; i++) {
+            int digit = Character.digit(isbn.charAt(i), 10);
+            sum += (i % 2 == 0) ? digit : digit * 3; // 权重交替 1,3,1,3...
+        }
+        int check = (10 - (sum % 10)) % 10;
+        int lastDigit = Character.digit(isbn.charAt(12), 10);
+        return check == lastDigit;
     }
 
     @Override
