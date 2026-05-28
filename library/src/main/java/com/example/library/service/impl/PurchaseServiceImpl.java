@@ -42,7 +42,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public void addPurchase(Purchase purchase) {
-        // 1. 若关联了已有图书，自动填充图书信息
+        // 1. 若关联了已有图书，自动填充图书信息（此时 ISBN 已由系统保证正确，无需再校验）
         if (purchase.getBookId() != null) {
             Book book = bookRepo.findById(purchase.getBookId())
                     .orElseThrow(() -> new BizException(ErrorCodes.BOOK_NOT_FOUND, "图书不存在"));
@@ -60,17 +60,31 @@ public class PurchaseServiceImpl implements PurchaseService {
             throw new BizException(ErrorCodes.BAD_REQUEST, "书名不能为空");
         }
 
-        // 3. ISBN 校验位检查（支持带连字符的格式）
-        String cleanIsbn = purchase.getIsbn().replaceAll("[^0-9]", "");  // 去除空格、连字符等
-        if (!isValidIsbn13(cleanIsbn)) {
-            throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN格式不正确或校验位错误");
-        }
-        purchase.setIsbn(cleanIsbn);  // 统一存储纯数字
+        // 3. 清除分隔符，保留数字及可能的 X（仅 10 位 ISBN 允许 X）
+        String rawIsbn = purchase.getIsbn().replaceAll("[^0-9Xx]", "").toUpperCase();
 
-        // 4. 如果未关联已有图书，检查 ISBN 是否已存在于 books 表
+        // 4. 根据长度选择校验方式，并统一转为 13 位纯数字存储
+        String normalizedIsbn;
+        if (rawIsbn.length() == 13) {
+            if (!isValidIsbn13(rawIsbn)) {
+                throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN（13位）校验位错误");
+            }
+            normalizedIsbn = rawIsbn;
+        } else if (rawIsbn.length() == 10) {
+            if (!isValidIsbn10(rawIsbn)) {
+                throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN（10位）校验位错误");
+            }
+            normalizedIsbn = convert10to13(rawIsbn);
+        } else {
+            throw new BizException(ErrorCodes.BAD_REQUEST, "ISBN长度必须为10位或13位");
+        }
+
+        purchase.setIsbn(normalizedIsbn);   // 统一存储 13 位纯数字
+
+        // 5. 查重：仅当未关联已有图书时才检查（同一本书允许重复进货）
         if (purchase.getBookId() == null) {
-            if (bookRepo.findByIsbn(cleanIsbn).isPresent()) {
-                throw new BizException(ErrorCodes.ISBN_EXISTS, 
+            if (bookRepo.findByIsbn(normalizedIsbn).isPresent()) {
+                throw new BizException(ErrorCodes.ISBN_EXISTS,
                         "该ISBN已存在对应的库存图书，请通过选择图书（提供bookId）创建进货单");
             }
         }
@@ -79,24 +93,61 @@ public class PurchaseServiceImpl implements PurchaseService {
         purchaseRepo.insert(purchase);
     }
 
+    // ---------- 辅助校验方法 ----------
+
     /**
-     * 验证 ISBN‑13 校验位（只接受13位纯数字）
+     * 验证 ISBN‑13 校验位（纯数字）
      */
     private boolean isValidIsbn13(String isbn) {
-        if (isbn == null || isbn.length() != 13) {
-            return false;
-        }
-        if (!isbn.matches("\\d{13}")) {
+        if (isbn == null || isbn.length() != 13 || !isbn.matches("\\d{13}")) {
             return false;
         }
         int sum = 0;
         for (int i = 0; i < 12; i++) {
             int digit = Character.digit(isbn.charAt(i), 10);
-            sum += (i % 2 == 0) ? digit : digit * 3; // 权重交替 1,3,1,3...
+            sum += (i % 2 == 0) ? digit : digit * 3;
         }
         int check = (10 - (sum % 10)) % 10;
         int lastDigit = Character.digit(isbn.charAt(12), 10);
         return check == lastDigit;
+    }
+
+    /**
+     * 验证 ISBN‑10 校验位（允许末位为 X 表示 10）
+     */
+    private boolean isValidIsbn10(String isbn) {
+        if (isbn == null || isbn.length() != 10) {
+            return false;
+        }
+        // 前9位必须是数字，第10位可以是数字或'X'
+        if (!isbn.substring(0, 9).matches("\\d{9}")) {
+            return false;
+        }
+        char last = isbn.charAt(9);
+        if (!Character.isDigit(last) && last != 'X') {
+            return false;
+        }
+        int sum = 0;
+        for (int i = 0; i < 9; i++) {
+            sum += Character.digit(isbn.charAt(i), 10) * (10 - i);
+        }
+        sum += (last == 'X') ? 10 : Character.digit(last, 10);
+        return sum % 11 == 0;
+    }
+
+    /**
+     * 将有效的 10 位 ISBN 转换为 13 位
+     * 规则：取前 9 位，在前面加上 "978"，重新计算校验位
+     */
+    private String convert10to13(String isbn10) {
+        String prefix = "978" + isbn10.substring(0, 9);
+        int sum = 0;
+        for (int i = 0; i < 12; i++) {
+            int digit = Character.digit(prefix.charAt(i), 10);
+            sum += (i % 2 == 0) ? digit : digit * 3;
+        }
+        int check = (10 - (sum % 10)) % 10;
+        return prefix + check;
     }
 
     @Override
